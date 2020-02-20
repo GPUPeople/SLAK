@@ -28,7 +28,6 @@
 #include <cstdio>
 
 #include <builtin_types.h>
-#include <host_defines.h>
 
 #include "math/vector.h"
 

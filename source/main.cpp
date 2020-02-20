@@ -32,55 +32,56 @@
 
 int main(int argc, char* argv[])
 {
-	std::vector<std::string> paths;
-	std::vector<int> schemes;
-	std::vector<int> target_levels;
-	std::vector<bool> save_results;
-
-	if (argc == 2)
-	{
-		std::ifstream file;
-		file.open(argv[1], std::ios::in);
-		if (!file.is_open())
-			std::cerr << "Error: could not open file\n" << std::endl;
-
-		while (!file.eof())
-		{
-			std::string line;
-			std::getline(file, line);
-
-			if (line[0] == '#')
-				continue;
-
-			std::istringstream ss(line);
-			std::string path; int scheme; int target_level; bool save_result;
-			ss >> path >> scheme >> target_level >> save_result;
-
-			paths.emplace_back(path);
-			schemes.emplace_back(scheme);
-			target_levels.emplace_back(target_level);
-			save_results.emplace_back(save_result);
-		}
-
-		file.close();
-	}
-	else if (argc == 5)
-	{
-		paths.emplace_back(std::string(argv[1]));
-		schemes.emplace_back(atoi(argv[2]));
-		target_levels.emplace_back(atoi(argv[3]));
-		save_results.emplace_back(static_cast<bool>(atoi(argv[4])));
-	}
-	else
-	{
-		std::cerr << "Usage: NoViewerSLAK <path_to_obj> <scheme> <target_level> <save_result>" << std::endl;
-		std::cerr << "Usage: NoViewerSLAK config_file" << std::endl;
-		return -1;
-	}
-
-
 	try
 	{
+		std::vector<std::string> paths;
+		std::vector<int> schemes;
+		std::vector<int> target_levels;
+		std::vector<bool> save_results;
+
+		if (argc == 2)
+		{
+			std::ifstream file;
+			file.open(argv[1], std::ios::in);
+			if (!file.is_open())
+				std::cerr << "Error: could not open file\n" << std::endl;
+
+			while (!file.eof())
+			{
+				std::string line;
+				std::getline(file, line);
+
+				if (line[0] == '#')
+					continue;
+
+				std::istringstream ss(line);
+				std::string path; int scheme; int target_level; bool save_result;
+				ss >> path >> scheme >> target_level >> save_result;
+
+				paths.emplace_back(path);
+				schemes.emplace_back(scheme);
+				target_levels.emplace_back(target_level);
+				save_results.emplace_back(save_result);
+			}
+
+			file.close();
+		}
+		else if (argc == 5)
+		{
+			paths.emplace_back(std::string(argv[1]));
+			schemes.emplace_back(atoi(argv[2]));
+			target_levels.emplace_back(atoi(argv[3]));
+			save_results.emplace_back(static_cast<bool>(atoi(argv[4])));
+		}
+		else
+		{
+			std::cerr << "Usage: NoViewerSLAK <path_to_obj> <scheme> <target_level> <save_result>" << std::endl;
+			std::cerr << "Usage: NoViewerSLAK config_file" << std::endl;
+			return -1;
+		}
+
+
+
 		for (size_t i = 0; i < paths.size(); ++i)
 		{
 			std::cout << "Mesh: " << paths[i] << std::endl;
@@ -108,12 +109,18 @@ int main(int argc, char* argv[])
 				std::string scheme_id = schemes[i] == 0 ? "LAK" : "SLAK";
 				std::string out_file_prefix = paths[i].substr(0, paths[i].find_last_of("."));
 				rmesh.toObj(out_file_prefix + "_" + std::to_string(target_levels[i]) + "_" + scheme_id + ".obj");
-				
 			}
+
+			std::cout << "\n\n";
 		}
+	}
+	catch (const std::exception & e)
+	{
+		printf("%s\n", e.what());
 	}
 	catch (...)
 	{
+
 	}
 	return 0;
 }

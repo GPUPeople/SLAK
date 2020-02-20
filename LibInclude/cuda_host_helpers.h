@@ -27,6 +27,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <stdexcept>
 #include <cusparse.h>
 
 #include "cuda_runtime_api.h"
@@ -35,15 +36,14 @@ inline void succeed(cudaError_t e)
 {
 	if(e != cudaSuccess)
 	{
-		printf("CUDA ERROR: %s", cudaGetErrorString(e));
-		throw(cudaGetErrorString(e));
+		throw std::runtime_error(cudaGetErrorString(e));
 	}
 }
 
 inline void cuSparseSucceed(cusparseStatus_t status, std::string errorMsg = "CusparseError")
 {
 	if (status != CUSPARSE_STATUS_SUCCESS)
-		throw (errorMsg.c_str());
+		throw std::runtime_error(errorMsg.c_str());
 }
 
 

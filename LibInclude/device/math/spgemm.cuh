@@ -29,15 +29,16 @@
 #include "math/bhsparse_cuda.cuh"
 
 #include <cuda_runtime_api.h>
+#include "cuda_host_helpers.h"
 
-#include <cuda_host_helpers.h>
+#include <stdexcept>
 
 
 
-void checkErr(int bhSparseErr)
+inline void checkErr(int bhSparseErr)
 {
 	if (bhSparseErr != BHSPARSE_SUCCESS)
-		throw ("bh sparse error");
+		throw std::runtime_error("bh sparse error");
 }
 
 

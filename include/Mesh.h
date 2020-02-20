@@ -31,6 +31,7 @@
 #include <numeric>
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 
 
 #include "obj.h"
@@ -304,7 +305,7 @@ namespace GPU
 		void reduce()
 		{
 			if (type == MeshType::POLY)
-				throw("mesh type not homogeneous");
+				throw std::runtime_error("mesh type not homogeneous");
 
 			if (is_reduced)
 				return;
@@ -334,7 +335,7 @@ namespace GPU
 		void unreduce()
 		{
 			if (type == MeshType::POLY)
-				throw("mesh type not homogeneous");
+				throw std::runtime_error("mesh type not homogeneous");
 
 			if (!is_reduced)
 				return;

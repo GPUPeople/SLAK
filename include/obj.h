@@ -26,7 +26,6 @@
 #pragma once
 
 
-#include <cstdint>
 #include <limits>
 #include <cctype>
 #include <algorithm>
@@ -35,8 +34,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include <exception>
-#include <memory>
+#include <stdexcept>
 
 #include <unordered_map>
 
@@ -110,7 +108,7 @@ namespace OBJ
 
 		std::ifstream in(fname);
 		if (!in.is_open())
-			throw ("Could not open obj file\n");
+			throw std::runtime_error("Could not open obj file\n");
 
 		int min_face = std::numeric_limits<int>::max();
 		int max_face = 0;
