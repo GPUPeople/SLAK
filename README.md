@@ -31,8 +31,8 @@ SLAK <config>
 
 Requirements:
 Linux or Windows
-python
-CMake Version 3.16
-gcc-8 or Visual Studio 2019
-CUDA 10.2
+python 3.7
+CMake Version >= 3.10
+gcc Version < 9 or Visual Studio 2019
+CUDA 10.x
 Nvidia GPU with CC 6.1, 7.0 or 7.5

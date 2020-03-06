@@ -23,14 +23,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.10)
 project(SLAK LANGUAGES CXX CUDA)
 
 #some problem with gcc-9 for whatever reason
 if(WIN32)
-else()
-set(CMAKE_C_COMPILER /usr/bin/gcc-8)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-8)
+elseif(CMAKE_CXX_COMPILER_ID EQUAL GNU AND CMAKE_CXX_COMPILER_VERSION GREATER 8.4)
+message(FATAL_ERROR "ERROR: GCC ${CMAKE_CXX_COMPILER_VERSION} not supported. Please specify a different generator.")
 endif()
 
 include(ExternalProject)
@@ -56,10 +55,10 @@ include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
 ##########################################################################
 # Choose for which CC to build and if to enable Debug
-option(CUDA_BUILD_CC61 "Build with compute capability 6.1 support" FALSE)
+option(CUDA_BUILD_CC61 "Build with compute capability 6.1 support" TRUE)
 option(CUDA_BUILD_CC70_SYNC "Build with compute capability 7.0 support - SYNC" FALSE)
 option(CUDA_BUILD_CC70_ASYNC "Build with compute capability 7.0 support - ASYNC" FALSE)
-option(CUDA_BUILD_CC75_SYNC "Build with compute capability 7.5 support - SYNC" TRUE)
+option(CUDA_BUILD_CC75_SYNC "Build with compute capability 7.5 support - SYNC" FALSE)
 option(CUDA_BUILD_CC75_ASYNC "Build with compute capability 7.5 support - ASYNC" FALSE)
 option(CUDA_BUILD_INFO "Build with kernel statistics and line numbers" TRUE)
 option(CUDA_BUILD_DEBUG "Build with kernel debug" FALSE)
