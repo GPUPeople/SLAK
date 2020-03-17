@@ -6,12 +6,9 @@ import getpass
 
 def main():
     print('Setting up SLAK')
+
+    os.system('git submodule update --init --recursive')
     
-	os.system('cd grsidata')
-	os.system('git checkout master')
-	os.system('git pull')
-	os.system('cd ..')
-	
     print("\nExtracting...")
     with zipfile.ZipFile('./grsidata/SLAKData.zip') as meshes:
         meshes.extractall('./grsidata/', )
