@@ -1,26 +1,21 @@
 import os
 import platform
-import urllib2
 import zipfile
 import shutil
 import getpass
 
 def main():
     print('Setting up SLAK')
-
-    print("Downloading Meshes...")
-    url = 'https://files.icg.tugraz.at/f/997236cfb9a44d02af66/?dl=1'
-    fdata = urllib2.urlopen(url)
-    with open('./data/SLAKData.zip', 'wb') as f:
-        f.write(fdata.read())
-    print("[DONE]\n")
-
-    password = getpass.getpass(prompt='Please enter the archive password: ', stream=None) 
+    
+	os.system('cd grsidata')
+	os.system('git checkout master')
+	os.system('git pull')
+	os.system('cd ..')
+	
     print("\nExtracting...")
-    with zipfile.ZipFile('./data/SLAKData.zip') as meshes:
-        meshes.extractall('./data/', pwd=password.encode())
+    with zipfile.ZipFile('./grsidata/SLAKData.zip') as meshes:
+        meshes.extractall('./grsidata/', )
     print('[DONE]\n')
-    os.remove('./data/SLAKData.zip')
 
     if os.path.exists('./build'):
         shutil.rmtree('./build')
@@ -52,8 +47,8 @@ def main():
         os.system('chmod +x SLAK')
         exec_prefix = './'
         
-    print(exec_prefix + 'SLAK' + exec_extension + ' ../data/config.txt')
-    os.system(exec_prefix + 'SLAK' + exec_extension + ' ../data/config.txt')
+    print(exec_prefix + 'SLAK' + exec_extension + ' ../grsidata/config.txt')
+    os.system(exec_prefix + 'SLAK' + exec_extension + ' ../grsidata/config.txt')
 
 
 if __name__ == "__main__":
