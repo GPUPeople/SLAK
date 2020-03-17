@@ -1,0 +1,3 @@
+[submodule "grsidata"]
+	path = grsidata
+	url = https://gitlab.icg.tugraz.at/slak/data.git
