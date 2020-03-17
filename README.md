@@ -36,3 +36,5 @@ CMake Version >= 3.10
 gcc Version < 9 or Visual Studio 2019
 CUDA 10.x
 Nvidia GPU with CC 6.1, 7.0 or 7.5
+
+Note: The software requires a modern CUDA toolkit. For Linux this would mean e.g. Ubuntu Disco (19.04) onwards.

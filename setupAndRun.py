@@ -7,6 +7,12 @@ import getpass
 def main():
     print('Setting up SLAK')
 
+    if 'ubuntu' in platform.platform().lower():
+        apt_get_cmd = 'sudo apt-get install cmake build-essential nvidia-cuda-toolkit git-lfs'
+        print('Going to run command:\n \"' + apt_get_cmd + '\"')
+        print('which will require your password')
+        os.system(apt_get_cmd)
+
     os.system('git submodule update --init --recursive')
     
     print("\nExtracting...")
