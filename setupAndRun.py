@@ -1,19 +1,21 @@
 import os
 import platform
-import urllib.request
+import urllib2
 import zipfile
 import shutil
+import getpass
 
 def main():
     print('Setting up SLAK')
 
     print("Downloading Meshes...")
     url = 'https://files.icg.tugraz.at/f/997236cfb9a44d02af66/?dl=1'
-    urllib.request.urlretrieve(url, './data/SLAKData.zip')
+    fdata = urllib2.urlopen(url)
+    with open('./data/SLAKData.zip', 'wb') as f:
+        f.write(fdata.read())
     print("[DONE]\n")
 
-    print('Please enter the archive password: ')
-    password = input()
+    password = getpass.getpass(prompt='Please enter the archive password: ', stream=None) 
     print("\nExtracting...")
     with zipfile.ZipFile('./data/SLAKData.zip') as meshes:
         meshes.extractall('./data/', pwd=password.encode())
