@@ -1,0 +1,4 @@
+../data/RoadBike.obj 0 4 0
+../data/RoadBike.obj 1 4 0
+../data/SportsCar.obj 0 4 0
+../data/SportsCar.obj 1 4 0

@@ -38,3 +38,4 @@ CUDA 10.x
 Nvidia GPU with CC 6.1, 7.0 or 7.5
 
 Note: The software requires a modern CUDA toolkit. For Linux this would mean e.g. Ubuntu Disco (19.04) onwards.
+Note: Not all the models from the paper are freely available. Therefore, only a subset is provided in this repository.

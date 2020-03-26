@@ -13,12 +13,6 @@ def main():
         print('which will require your password')
         os.system(apt_get_cmd)
 
-    os.system('git submodule update --init --recursive')
-    
-    print("\nExtracting...")
-    with zipfile.ZipFile('./grsidata/SLAKData.zip') as meshes:
-        meshes.extractall('./grsidata/', )
-    print('[DONE]\n')
 
     if os.path.exists('./build'):
         shutil.rmtree('./build')
@@ -50,8 +44,8 @@ def main():
         os.system('chmod +x SLAK')
         exec_prefix = './'
         
-    print(exec_prefix + 'SLAK' + exec_extension + ' ../grsidata/config.txt')
-    os.system(exec_prefix + 'SLAK' + exec_extension + ' ../grsidata/config.txt')
+    print(exec_prefix + 'SLAK' + exec_extension + ' ../data/config.txt')
+    os.system(exec_prefix + 'SLAK' + exec_extension + ' ../data/config.txt')
 
 
 if __name__ == "__main__":
