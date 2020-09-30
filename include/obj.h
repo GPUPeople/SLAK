@@ -26,7 +26,6 @@
 #pragma once
 
 
-#include <cstdint>
 #include <limits>
 #include <cctype>
 #include <algorithm>
@@ -35,8 +34,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-#include <exception>
-#include <memory>
+#include <stdexcept>
 
 #include <unordered_map>
 
@@ -105,318 +103,155 @@ namespace OBJ
 	////////////////////////////////////////////////////////////////////////////////
 	/// Read functionality
 
+
 	inline void read(Data& data, const char* fname)
 	{
+		std::ifstream in_file(fname);
+		if (!in_file.is_open())
+			throw std::runtime_error("Could not open obj file\n");
 
-		std::ifstream in(fname);
-		if (!in.is_open())
-			throw ("Could not open obj file\n");
-
-		int min_face = std::numeric_limits<int>::max();
-		int max_face = 0;
-		int row = 0;
-		while (true)
+		data.f_offs.push_back(0);
+		
+		int ln_nbr = 0;
+		std::string in_line;
+		while (std::getline(in_file, in_line))
 		{
+			++ln_nbr;
 
-			while (in && std::isspace(in.peek()))
-				in.get();
+			if (in_line.empty())
+				continue;
+			
+			std::stringstream in(in_line);
+			std::string id;
+			in >> id;
 
-			if (in)
+			if (id == "#")
+				continue;
+
+			if (id == "g")
+				continue;
+
+			if (id == "v")
 			{
-				char c = in.get();
 
-				switch (c)
+				math::float3 p;
+				in >> p.x >> p.y >> p.z;
+				data.v.push_back(p);
+				continue;
+
+			}
+
+			if (id == "vn")
+			{
+				math::float3 n;
+				in >> n.x >> n.y >> n.z;
+				n.z = -n.z;
+				data.vn.push_back(n);
+				continue;
+			}
+
+			if (id == "vt")
+			{
+				math::float2 t;
+				in >> t.x >> t.y;
+				data.vt.push_back(t);
+				continue;
+			}
+
+			if (id == "f")
+			{
+				int nverts = 0;
+				int vi{ -1 };
+				while (in >> vi && !in.fail())
 				{
-				case 'v':
-				{
-					if (std::isspace(in.peek()))
+					data.f_vi.push_back(vi < 0 ? vi + static_cast<int>(data.v.size()) : vi - 1);
+					vi = -1;
+					
+					if (in.peek() == '/')
 					{
-						math::float3 p;
-						in >> p.x >> p.y >> p.z;
-						data.v.push_back(p);
-						using namespace math;
-					}
-					else
-					{
-						char c2 = in.get();
+						in.get();
 
-						switch (c2)
-						{
-						case 'n':
-						{
-							math::float3 n;
-							in >> n.x >> n.y >> n.z;
-							n.z = -n.z;
-							data.vn.push_back(n);
-							break;
-						}
-						case 't':
-						{
-							math::float2 t;
-							in >> t.x >> t.y;
-							data.vt.push_back(t);
+						int ti{ -1 };
+						in >> ti;
 
-							while (in && in.peek() != '\n' && std::isspace(in.peek()))
-								in.get();
-
-							float t3;
-							if (in.peek() != '\n')
-							{
-								in >> t3;
-								if (in.fail())
-								{
-									in.clear();
-									std::cout << "\rWARNING(ln " << row << "): additional content after 2D texture coordinate" << '\n';
-								}
-								else if (t3 != 0)
-								{
-									static bool warned = false;
-									if (!warned)
-										std::cout << "\rWARNING(ln " << row << "): 3D texture coordinates not supported" << '\n';
-									warned = true;
-								}
-
-							}
-						}
-						}
-					}
-					break;
-				}
-
-				case 'f':
-				{
-
-					if (data.f_offs.size() > 1)
-					{
-						int face_order = data.f_vi.size() - data.f_offs.back();
-						min_face = std::min(face_order, min_face);
-						max_face = std::max(face_order, max_face);
-					}
-					data.f_offs.push_back(data.f_vi.size());
-
-					while (in && in.peek() != '\n')
-					{
-						int vi, ni = -1, ti = -1;
-
-						in >> vi;
-
-						if (vi < 0)
-							vi += static_cast<int>(data.v.size());
+						if (in.fail())
+							in.clear();
 						else
-							--vi;
+							data.f_vti.push_back(ti < 0 ? ti + static_cast<int>(data.vt.size()) : ti - 1);
 
 						if (in.peek() == '/')
 						{
 							in.get();
 
-							in >> ti;
+							int ni{ -1 };
+							in >> ni;
 
 							if (in.fail())
 								in.clear();
 							else
-							{
-								if (ti < 0)
-									ti += static_cast<int>(data.vt.size());
-								else
-									--ti;
-
-								data.f_vti.push_back(ti);
-							}
-
-							if (in.peek() == '/')
-							{
-								in.get();
-
-								in >> ni;
-
-								if (in.fail())
-									in.clear();
-								else
-								{
-									if (ni < 0)
-										ni += static_cast<int>(data.vn.size());
-									else
-										--ni;
-
-									data.f_vni.push_back(ni);
-								}
-							}
+								data.f_vni.push_back(ni < 0 ? ni + static_cast<int>(data.vn.size()) : ni - 1);
 						}
-						data.f_vi.push_back(vi);
-
-						while (in && std::isblank(in.peek()))
-							in.get();
 					}
 
-
-					break;
+					++nverts;
 				}
-
-				case 't':
-				{
-					Data::Tag ct;
-					in >> ct.type;
-
-					auto intargs = 0;
-					in >> intargs;
-
-					in.get();
-
-					auto floatargs = 0;
-					in >> floatargs;
-
-					in.get();
-
-					auto stringargs = 0;
-					in >> stringargs;
-
-					ct.intargs.resize(intargs, 0);
-					for (auto i = 0; i < intargs; ++i)
-						in >> ct.intargs[i];
-
-					ct.floatargs.resize(floatargs, 0);
-					for (auto i = 0; i < floatargs; ++i)
-						in >> ct.floatargs[i];
-
-					data.t.push_back(ct);
-
-					break;
-				}
-
-				case 'g':
-				{
-					std::string group_name_unused;
-					in >> group_name_unused;
-					break;
-				}
-
-				case '#':
-					// ignore comments
-					while (in && in.get() != '\n') {};
-					break;
-
-				default:
-					//UnknownEntry:
-				{
-					std::stringstream unknown;
-					bool nontrivial = (!std::isspace(c) && !std::iscntrl(c) && (c != std::char_traits<char>::eof()));
-					unknown << c;
-					while (in && (c = in.get()) != '\n')
-						nontrivial |= (!std::isspace(c) && !std::iscntrl(c) && (c != std::char_traits<char>::eof())),
-						unknown << c;
-					//if (nontrivial)
-					//	std::cout << "\rWARNING (ln " << row << "): unknown entry in obj: \"" << unknown.str() << "\"\n";
-					break;
-				}
-				}
+				data.f_offs.push_back(data.f_offs.back() + nverts);
+				continue;
 			}
-			else
-				break;
+
+			if (id == "t")
+			{
+				Data::Tag ct;
+				in >> ct.type;
+
+				auto intargs = 0;
+				in >> intargs;
+
+				in.get();
+
+				auto floatargs = 0;
+				in >> floatargs;
+
+				in.get();
+
+				auto stringargs = 0;
+				in >> stringargs;
+
+				ct.intargs.resize(intargs, 0);
+				for (auto i = 0; i < intargs; ++i)
+					in >> ct.intargs[i];
+
+				ct.floatargs.resize(floatargs, 0);
+				for (auto i = 0; i < floatargs; ++i)
+					in >> ct.floatargs[i];
+
+				data.t.push_back(ct);
+
+				continue;
+			}
+
+			////UnknownEntry:
+			//std::cout << "Warning: Unknown Entry \"" << in_line << "\" in line " << ln_nbr << "!" << std::endl;
 		}
 
-		min_face = std::min(static_cast<int>(data.f_vi.size() - data.f_offs.back()), min_face);
-		max_face = std::max(static_cast<int>(data.f_vi.size() - data.f_offs.back()), max_face);
-		data.f_offs.push_back(data.f_vi.size());
-		data.max_face_order = max_face;
-
-
-		bool homogeneous_face_type = min_face == max_face;
-		data.type = !homogeneous_face_type ? (Data::FaceType::POLY) : (min_face == 3 ? Data::FaceType::TRI : (min_face == 4 ? Data::FaceType::QUAD : Data::FaceType::POLY));
-
-		if (homogeneous_face_type && min_face == 3)
+		int min = std::numeric_limits<int>::max();
+		data.max_face_order = 0;
+		for(auto it = data.f_offs.cbegin() + 1; it != data.f_offs.end(); ++it)
 		{
-			data.type = Data::FaceType::TRI;
+			int order = *it - *(it - 1);
+			min = std::min(order, min);
+			data.max_face_order = std::max(order, data.max_face_order);
 		}
-		else if (homogeneous_face_type && min_face == 4)
-		{
-			data.type = Data::FaceType::QUAD;
-		}
-		else
+		
+		if (min != data.max_face_order || data.max_face_order > 4)
 			data.type = Data::FaceType::POLY;
-
-
-		if (data.type == Data::FaceType::QUAD)
-		{
-			if (data.vn.size() != data.v.size())
-			{
-				//std::cout << "Generating smooth normals\n";
-				data.vn.resize(data.v.size());
-				std::fill(data.vn.begin(), data.vn.end(), math::float3(0));
-				for (size_t i = 3; i < data.f_vi.size(); i += 4)
-				{
-					const math::float3& p0 = data.v[data.f_vi[i - 3]];
-					const math::float3& p1 = data.v[data.f_vi[i - 2]];
-					const math::float3& p2 = data.v[data.f_vi[i - 1]];
-					const math::float3& p3 = data.v[data.f_vi[i - 0]];
-					const math::float3 n012 = cross(p1 - p0, p2 - p1);
-					const math::float3 n023 = cross(p3 - p2, p0 - p3);
-					const math::float3 n123 = cross(p2 - p1, p3 - p2);
-					const math::float3 n013 = cross(p0 - p3, p1 - p0);
-					data.vn[data.f_vi[i - 3]] += n023 + n123 + n013;
-					data.vn[data.f_vi[i - 2]] += n012 + n023 + n123;
-					data.vn[data.f_vi[i - 1]] += n012 + n123 + n013;
-					data.vn[data.f_vi[i - 0]] += n012 + n023 + n013;
-				}
-				for (auto& n : data.vn)
-					if (length2(n) > 0.000001f)
-						n = normalize(n);
-			}
-		}
-		else if (data.type == Data::FaceType::TRI)
-		{
-			if (data.vn.size() != data.v.size())
-			{
-				//std::cout << "Generating smooth normals\n";
-				data.vn.resize(data.v.size());
-				std::fill(data.vn.begin(), data.vn.end(), math::float3(0));
-				for (size_t i = 2; i < data.f_vi.size(); i += 3)
-				{
-					const math::float3& p0 = data.v[data.f_vi[i - 2]];
-					const math::float3& p1 = data.v[data.f_vi[i - 1]];
-					const math::float3& p2 = data.v[data.f_vi[i - 0]];
-					const math::float3 n = cross(p1 - p0, p2 - p1);
-					data.vn[data.f_vi[i - 2]] += n;
-					data.vn[data.f_vi[i - 1]] += n;
-					data.vn[data.f_vi[i - 0]] += n;
-				}
-				for (auto& n : data.vn)
-					if (length2(n) > 0.000001f)
-						n = normalize(n);
-			}
-		}
+		else if (data.max_face_order == 4)
+			data.type = Data::FaceType::QUAD;
+		else if (data.max_face_order == 3)
+			data.type = Data::FaceType::TRI;
 		else
-		{
-			if (data.vn.size() != data.v.size())
-			{
-				//std::cout << "Generating smooth normals\n";
-				data.vn.resize(data.v.size());
-				std::fill(data.vn.begin(), data.vn.end(), math::float3(0));
-
-				for (auto fid = 0; fid < data.f_offs.size() - 1; ++fid)
-				{
-					std::vector<int>id_current(data.f_vi.begin() + data.f_offs[fid], data.f_vi.begin() + data.f_offs[fid + 1]);
-					unsigned i0 = (0 - 1) % 4;
-
-					auto face_order = data.f_offs[fid + 1] - data.f_offs[fid];
-					for (auto i = 0; i < face_order; ++i)
-					{
-						math::float3 p0 = data.v[id_current[(i + face_order - 1) % face_order]];
-						math::float3 p1 = data.v[id_current[i]];
-						math::float3 p2 = data.v[id_current[(i + 1) % face_order]];
-						math::float3 n = cross(p1 - p0, p2 - p1);
-						data.vn[id_current[(i + face_order - 1) % face_order]] += n;
-						data.vn[id_current[i]] += n;
-						data.vn[id_current[(i + 1) % face_order]] += n;
-
-					}
-				}
-			}
-			for (auto& n : data.vn)
-				if (length2(n) > 0.000001f)
-					n = normalize(n);
-		}
+			throw std::runtime_error("Error loading obj: Face with less than three vertices detected.\n");
 	}
-
 
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -444,7 +279,7 @@ namespace OBJ
 		}
 		else
 		{
-			if(data.type == Data::FaceType::POLY)
+			if (data.type == Data::FaceType::POLY)
 			{
 				std::cerr << "Error: Face-offsets required to write a poly mesh!" << std::endl;
 				out.close();
