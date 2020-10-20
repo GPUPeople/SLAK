@@ -381,56 +381,46 @@ void LAKCatmullClark::initPolyMesh(MESH_INFO const& cmesh, MESH_INFO& rmesh, Con
 	cusparseHandle_t handle;
 	cuSparseSucceed(cusparseCreate(&handle));
 
-	prof.start(start, "transposing M");
-	cuSparseSucceed(cusparseScsr2csc(handle,
-		cmesh.nfaces, cmesh.nverts, cmesh.nnz,
-		reinterpret_cast<const float*>(cmesh.vals), cmesh.ptr, cmesh.ids,
-		reinterpret_cast<float*>(d_vals_t), d_ids_t, d_ptr_t,
-		CUSPARSE_ACTION_NUMERIC,
-		CUSPARSE_INDEX_BASE_ZERO));
-	prof.stop(start, stop);
-
 	//This would be the non-deprecated version... doesn't work
-	//size_t buffer_size{ 42 };
-	//prof.start(start, "transposing M 1/2");
-	//cuSparseSucceed(cusparseCsr2cscEx2_bufferSize(
-	//	handle,
-	//	cmesh.nfaces,
-	//	cmesh.nverts,
-	//	cmesh.nnz,
-	//	cmesh.vals,
-	//	cmesh.ptr,
-	//	cmesh.ids,
-	//	d_vals_t,
-	//	d_ptr_t,
-	//	d_ids_t,
-	//	CUDA_R_32I,
-	//	CUSPARSE_ACTION_SYMBOLIC,
-	//	CUSPARSE_INDEX_BASE_ZERO,
-	//	CUSPARSE_CSR2CSC_ALG1,
-	//	&buffer_size));
-	//prof.stop(start, stop);
-
-	//void* buffer = mem.getMemory(buffer_size);
-	//prof.start(start, "transposing M 2/2");
-	//cuSparseSucceed(cusparseCsr2cscEx2(handle,
-	//	cmesh.nfaces,
-	//	cmesh.nverts,
-	//	cmesh.nnz,
-	//	cmesh.vals,
-	//	cmesh.ptr,
-	//	cmesh.ids,
-	//	d_vals_t,
-	//	d_ptr_t,
-	//	d_ids_t,
-	//	CUDA_R_32I,
-	//	CUSPARSE_ACTION_NUMERIC,
-	//	CUSPARSE_INDEX_BASE_ZERO,
-	//	CUSPARSE_CSR2CSC_ALG1,
-	//	buffer));
-	//prof.stop(start, stop);
-	//mem.freeMemory(buffer);
-
+	size_t buffer_size{ 42 };
+	prof.start(start, "transposing M 1/2");
+	cuSparseSucceed(cusparseCsr2cscEx2_bufferSize(
+		handle,
+		cmesh.nfaces,
+		cmesh.nverts,
+		cmesh.nnz,
+		reinterpret_cast<const void*>(cmesh.vals),
+		reinterpret_cast<const int*>(cmesh.ptr),
+		reinterpret_cast<const int*>(cmesh.ids),
+		reinterpret_cast<void*>(d_vals_t),
+		reinterpret_cast<int*>(d_ptr_t),
+		reinterpret_cast<int*>(d_ids_t),
+		CUDA_R_32F,
+		CUSPARSE_ACTION_NUMERIC,
+		CUSPARSE_INDEX_BASE_ZERO,
+		CUSPARSE_CSR2CSC_ALG1,
+		&buffer_size));
+	prof.stop(start, stop);
+	
+	void* buffer = mem.getMemory(buffer_size);
+	prof.start(start, "transposing M 2/2");
+	cuSparseSucceed(cusparseCsr2cscEx2(handle,
+		cmesh.nfaces,
+		cmesh.nverts,
+		cmesh.nnz,
+		cmesh.vals,
+		cmesh.ptr,
+		cmesh.ids,
+		d_vals_t,
+		d_ptr_t,
+		d_ids_t,
+		CUDA_R_32F,
+		CUSPARSE_ACTION_NUMERIC,
+		CUSPARSE_INDEX_BASE_ZERO,
+		CUSPARSE_CSR2CSC_ALG1,
+		buffer));
+	prof.stop(start, stop);
+	mem.freeMemory(buffer);
 
 	std::vector<value_t> map;
 	getCircMapQ(map, cmesh.max_face_order, 1, 1); // Q_{cmesh.max_face_order}
